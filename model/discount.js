@@ -4,9 +4,11 @@ const discountSchema = new mongoose.Schema({
     book: {
         type: mongoose.Types.ObjectId,
         ref: "Book",
+        required: true,
     },
     branch: {
         type: String,
+        required: true,
     },
     discountPercentage: {
         type: Number,

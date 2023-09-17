@@ -36,5 +36,6 @@ routes.post("/add-review", isVerified, logs, reviewController.add)
 routes.put("/update-review", checkLogin, isVerified, logs, reviewController.updateReview)
 
 routes.post("/add-discount", checkLogin, isAdmin, logs, discountController.add)
+routes.patch("/update-discount", checkLogin, isAdmin, logs, discountController.update)
 
 module.exports = routes

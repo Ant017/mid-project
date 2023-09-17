@@ -34,10 +34,17 @@ const bookSchema = new mongoose.Schema({
     rating: {
         type: Number,
     },
-    discounts: {
-        type: [mongoose.Types.ObjectId],
-        ref: "Discount"
-    }
+    discounts: [
+        {
+            discountId: {
+                type: mongoose.Types.ObjectId,
+                ref: "Discount",
+            },
+            discountedPrice: {
+                type: Number,
+            }
+        }
+    ]
 })
 
 const Book = mongoose.model("Book", bookSchema);

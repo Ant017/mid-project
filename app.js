@@ -25,15 +25,13 @@ const checkAndUpdateDiscounts = async () => {
   try {
     // Find discounts that have expired
     const now = new Date();
-    console.log(now)
+    // console.log(now)
 
     // Find upcoming discounts with onGoing set to false
     const upcomingDiscounts = await discountModel.find({
-      startDate: { $gt: now },
+      startDate: { $lt: now },
       onGoing: false
     });
-
-    // console.log("upcoming", upcomingDiscounts)
 
     // Activate upcoming discounts
     for (const upcomingDiscount of upcomingDiscounts) {
@@ -43,7 +41,13 @@ const checkAndUpdateDiscounts = async () => {
       // Update the associated book document to add the discount ID
       const book = await bookModel.findById(upcomingDiscount.book);
       if (book) {
-        book.discounts.push(upcomingDiscount._id);
+        let updatedPrice = book.price
+        updatedPrice -= updatedPrice * (upcomingDiscount.discountPercentage/100)
+        book.discounts.push({
+          discountId: upcomingDiscount._id,
+          discountedPrice: updatedPrice
+        });
+        // book.discounts.push(upcomingDiscount._id);
         await book.save();
       }
     }
@@ -54,8 +58,6 @@ const checkAndUpdateDiscounts = async () => {
       onGoing: true,
     });
 
-    // console.log("expiry", expiredDiscounts)
-
     // Deactivate expired discounts
     for (const expiredDiscount of expiredDiscounts) {
       expiredDiscount.onGoing = false;
@@ -64,7 +66,9 @@ const checkAndUpdateDiscounts = async () => {
       // Update the associated book document to remove the discount ID
       const book = await bookModel.findById(expiredDiscount.book);
       if (book) {
-        book.discounts.pull(expiredDiscount._id);
+        // book.discounts.pull(expiredDiscount._id);
+        book.discounts.pull({ discountId: expiredDiscount._id });
+
         await book.save();
       }
     }
