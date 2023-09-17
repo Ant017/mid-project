@@ -4,7 +4,7 @@ const validator = {
     create: [
         body("reader_name")
             .isString()
-            .withMessage("email must be a string.")
+            .withMessage("Name must be a string.")
             .custom((value) => {
                 if (value === "Unknown") {
                     throw new Error("Name cannot be unknown")
@@ -20,6 +20,15 @@ const validator = {
             .withMessage("This is not a valid email id"),
     ],
     signup: [
+        body("reader_name")
+            .isString()
+            .withMessage("Name must be a string.")
+            .custom((value) => {
+                if (value === "Unknown") {
+                    throw new Error("Name cannot be unknown")
+                }
+                return true
+            }),
         body("reader_email")
             .isString()
             .withMessage("email must be a string.")

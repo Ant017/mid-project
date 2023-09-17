@@ -1,9 +1,9 @@
 const express = require('express')
-// const mangaRouter = require('./routes/mangaRoutes')
+const discountModel = require('./model/discount')
+const bookModel = require('./model/book')
 const bookshopRouter = require('./routes/bookshopRoutes')
 const cors = require("cors")
 const databaseConnection = require('./config/database')
-// const buyMangaRouter = require('./routes/b')
 const dotenv = require('dotenv')
 dotenv.config()
 
@@ -20,18 +20,68 @@ app.use((err, req, res, next) => {
   next()
 })
 
-app.use("/shop", bookshopRouter)
+// Define a function to check and update discounts
+const checkAndUpdateDiscounts = async () => {
+  try {
+    // Find discounts that have expired
+    const now = new Date();
+    console.log(now)
 
-app.set("view engine", "ejs")
-app.get("/hello", (req, res) => {
-  return res.render("hello.ejs", {
-    name: "My bookstore",
-    routes: [
-      { url: "/shop/get-all-books", description: "Gets all the books", method: "GET" },
-      { url: "/shop/add-book", description: "Adds a new book", method: "POST" }
-    ]
-  })
-})
+    // Find upcoming discounts with onGoing set to false
+    const upcomingDiscounts = await discountModel.find({
+      startDate: { $gt: now },
+      onGoing: false
+    });
+
+    // console.log("upcoming", upcomingDiscounts)
+
+    // Activate upcoming discounts
+    for (const upcomingDiscount of upcomingDiscounts) {
+      upcomingDiscount.onGoing = true;
+      await upcomingDiscount.save();
+
+      // Update the associated book document to add the discount ID
+      const book = await bookModel.findById(upcomingDiscount.book);
+      if (book) {
+        book.discounts.push(upcomingDiscount._id);
+        await book.save();
+      }
+    }
+
+    // Find discounts that have expired
+    const expiredDiscounts = await discountModel.find({
+      endDate: { $lt: now },
+      onGoing: true,
+    });
+
+    // console.log("expiry", expiredDiscounts)
+
+    // Deactivate expired discounts
+    for (const expiredDiscount of expiredDiscounts) {
+      expiredDiscount.onGoing = false;
+      await expiredDiscount.save();
+
+      // Update the associated book document to remove the discount ID
+      const book = await bookModel.findById(expiredDiscount.book);
+      if (book) {
+        book.discounts.pull(expiredDiscount._id);
+        await book.save();
+      }
+    }
+  } catch (error) {
+    console.error('Error checking and updating discounts:', error);
+  }
+};
+
+// Call the function initially and then at regular intervals
+checkAndUpdateDiscounts(); // Call immediately when your application starts
+
+// Set up the interval to periodically check and update discounts (e.g., every 24 hours)
+const intervalInMilliseconds = 15 * 1000; // 15 hours
+setInterval(checkAndUpdateDiscounts, intervalInMilliseconds);
+
+
+app.use("/shop", bookshopRouter)
 
 // using route() method to get the invalid routes
 app.route('*')

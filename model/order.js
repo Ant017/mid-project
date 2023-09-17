@@ -3,12 +3,15 @@ const mongoose = require("mongoose")
 const orderSchema = new mongoose.Schema({
     cart: {
         type: mongoose.Types.ObjectId,
-        ref: "Transaction"
+        ref: "Cart"
     },
-
+    reader: {
+        type: mongoose.Types.ObjectId,
+        ref: "Cart"
+    },
     total_spent: {
         type: Number,
-        ref: "Transaction"
+        ref: "Cart"
     },
 
     bought_books: [

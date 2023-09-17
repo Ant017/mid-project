@@ -1,23 +1,18 @@
 const mongoose = require("mongoose")
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
 
 const readerSchema = new mongoose.Schema({
     reader_name: {
         type: String,
-        required: [true, "Usrename should be provided"],
-        unique: true,
-        maxLength: 30
+        unique: true,        
     },
     reader_email: {
         type: String,
-        required: [true, "Email should be provided"],
-        unique: true
+        unique: true,
     },
     status: {
         type: Boolean,
         default: false
-    },
+    }
 
 }, { timestamps: true })
 

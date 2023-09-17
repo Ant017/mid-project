@@ -24,14 +24,14 @@ class bookController {
     //add data
     async add(req, res) {
         try {
-            const { title, author, genre, pages, price, stock } = req.body
+            const { title, author, genre, pages, price, stock, branch } = req.body
 
             let existingBook = await bookModel.findOne({ title, author })
             if (existingBook) {
                 return res.status(500).send(failure("This book already exists!"))
             }
             else {
-                const book = new bookModel({ title, author, genre, pages, price, stock })
+                const book = new bookModel({ title, author, genre, pages, price, stock, branch })
                 console.log(book)
                 await book.save()
 

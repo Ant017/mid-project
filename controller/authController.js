@@ -57,7 +57,7 @@ class AuthController {
                 return res.status(200).send(success("Refresh successful", response))
             }
             else {
-                return res.status(500).send(failure("This emial does not exist."))
+                return res.status(500).send(failure("This email does not exist."))
             }
         } catch (error) {
             if (error instanceof jwt.JsonWebTokenError) {
@@ -155,6 +155,7 @@ class AuthController {
             })
 
             const result = await authModel.create({
+                reader_name: reader_name,
                 reader_email: reader_email,
                 password: hashedPassword,
                 reader: readerInfo._id

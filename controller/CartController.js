@@ -197,8 +197,8 @@ class transactionController {
         }
     }
 
-    //get one data by id
-    async getOneById(req, res) {
+    //get the reader's cart
+    async showCart(req, res) {
         try {
             const { authorization } = req.headers
 
@@ -209,11 +209,21 @@ class transactionController {
             console.log("this is from the cart controller", readerIdFromToken)
             const existingCart = await cartModel.findOne({ reader: readerIdFromToken })
 
-            console.log(existingCart)
-            res.status(200).send(success("Got the data from the cart", existingCart))
+            if(existingCart) {
+                res.status(200).send(success("Got the data from the cart", existingCart))
+            }
+            else {
+            res.status(400).send(failure("This cart does not exist."))
+            }
 
         } catch (error) {
             console.log("error found", error)
+            if (error instanceof jwt.JsonWebTokenError) {
+                return res.status(500).send(failure("Token is invalid", error))
+            }
+            if (error instanceof jwt.TokenExpiredError) {
+                return res.status(500).send(failure("Token is expired", error))
+            }
             res.status(500).send(failure("Internal server error"))
         }
     }
@@ -252,10 +262,12 @@ class transactionController {
                     await bookData.save();
                 }
                 const totalSpent = existingCart.total_spent
+                const reader = existingCart.reader
 
                 // adding to the order schema
                 const orderInfo = await orderModel.create({
                     cart: cart,
+                    reader: reader,
                     total_spent: totalSpent,
                     bought_books: existingCart.bought_books
                 })
@@ -270,7 +282,45 @@ class transactionController {
 
         } catch (error) {
             console.error("Error while checking out:", error);
+            if (error instanceof jwt.JsonWebTokenError) {
+                return res.status(500).send(failure("Token is invalid", error))
+            }
+            if (error instanceof jwt.TokenExpiredError) {
+                return res.status(500).send(failure("Token is expired", error))
+            }
             return res.status(500).send(failure("Internal server error"))
+        }
+    }
+
+    //show reader's transactions
+    async showTransaction(req, res) {
+        try {
+            const { authorization } = req.headers
+
+            const token = authorization.split(' ')[1]
+            const decodedToken = jwt.decode(token, { complete: true })
+
+            const readerIdFromToken = decodedToken.payload.reader._id
+            console.log("this is from the cart controller", readerIdFromToken)
+            const existingTransaction = await orderModel.findOne({ reader: readerIdFromToken })
+
+            // console.log(existingTransaction)
+            if (existingTransaction) {
+                res.status(200).send(success("Got the data from transaction.", existingTransaction))
+            }
+            else {
+                res.status(400).send(failure("The reader has not made any transactions."))
+            }
+
+        } catch (error) {
+            console.log("error found", error)
+            if (error instanceof jwt.JsonWebTokenError) {
+                return res.status(500).send(failure("Token is invalid", error))
+            }
+            if (error instanceof jwt.TokenExpiredError) {
+                return res.status(500).send(failure("Token is expired", error))
+            }
+            res.status(500).send(failure("Internal server error"))
         }
     }
 
